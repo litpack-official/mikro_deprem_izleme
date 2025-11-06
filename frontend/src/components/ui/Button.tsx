@@ -1,8 +1,8 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import type { ButtonHTMLAttributes } from 'react';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   children: React.ReactNode;
@@ -35,6 +35,8 @@ export function Button({
     lg: 'px-8 py-4 text-lg',
   };
 
+  const { onAnimationStart, onDrag, onDragEnd, onDragStart, ...restProps } = props;
+
   return (
     <motion.button
       className={cn(
@@ -46,7 +48,7 @@ export function Button({
       disabled={disabled || loading}
       whileHover={{ scale: disabled || loading ? 1 : 1.05 }}
       whileTap={{ scale: disabled || loading ? 1 : 0.95 }}
-      {...props}
+      {...restProps}
     >
       {loading ? (
         <>

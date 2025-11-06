@@ -6,13 +6,15 @@ import type {
   RegionBounds,
 } from '@/types';
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+// API URL - Ngrok URL'iniz
+const API_BASE_URL = 'https://sarcological-fissiparous-melinda.ngrok-free.dev';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 60000, // 60 seconds for heavy computations
   headers: {
     'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true', // Ngrok browser warning'i atla
   },
 });
 

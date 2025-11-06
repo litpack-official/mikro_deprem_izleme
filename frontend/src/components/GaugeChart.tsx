@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { getStressColor, formatNumber } from '@/lib/utils';
 import { AlertTriangle, CheckCircle, AlertCircle } from 'lucide-react';

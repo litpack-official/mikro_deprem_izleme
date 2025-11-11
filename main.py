@@ -140,13 +140,40 @@ async def get_b_value_analysis(min_lat: float = Query(36.0), max_lat: float = Qu
         if conn: conn.close()
 
 @app.get("/depremler")
-async def get_son_depremler(min_lat: float = Query(36.0), max_lat: float = Query(42.0), min_lon: float = Query(26.0), max_lon: float = Query(45.0), max_mag: float = Query(9.9)):
+async def get_son_depremler(
+    min_lat: float = Query(36.0), 
+    max_lat: float = Query(42.0), 
+    min_lon: float = Query(26.0), 
+    max_lon: float = Query(45.0), 
+    max_mag: float = Query(9.9),
+    start_date: str = Query(None),  # Başlangıç tarihi (YYYY-MM-DD)
+    end_date: str = Query(None)     # Bitiş tarihi (YYYY-MM-DD)
+):
     conn = None
     try:
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        sql = "SELECT event_id, timestamp, latitude, longitude, depth, magnitude, location_text FROM earthquakes WHERE latitude >= %s AND latitude <= %s AND longitude >= %s AND longitude <= %s AND magnitude <= %s ORDER BY timestamp DESC LIMIT 1000;"
-        cur.execute(sql, (min_lat, max_lat, min_lon, max_lon, max_mag))
+        
+        # SQL sorgusu - tarih filtresi ekle
+        sql = """
+            SELECT event_id, timestamp, latitude, longitude, depth, magnitude, location_text 
+            FROM earthquakes 
+            WHERE latitude >= %s AND latitude <= %s 
+            AND longitude >= %s AND longitude <= %s 
+            AND magnitude <= %s
+        """
+        params = [min_lat, max_lat, min_lon, max_lon, max_mag]
+        
+        # Tarih filtrelerini ekle
+        if start_date:
+            sql += " AND timestamp >= %s"
+            params.append(start_date)
+        if end_date:
+            sql += " AND timestamp <= %s"
+            params.append(end_date + " 23:59:59")  # Günün sonuna kadar
+        
+        sql += " ORDER BY timestamp DESC LIMIT 1000;"
+        cur.execute(sql, params)
         depremler = cur.fetchall()
         cur.close()
         

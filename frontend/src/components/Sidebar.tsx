@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Button } from './ui/Button';
 import { Slider } from './ui/Slider';
 import { REGION_PRESETS, type FilterState, type RegionPreset } from '@/types';
-import { Map, Layers, Settings, Info } from 'lucide-react';
+import { Map, Layers, Settings, Info, Calendar } from 'lucide-react';
 
 interface SidebarProps {
   filters: FilterState;
@@ -112,6 +112,55 @@ export function Sidebar({ filters, onFilterChange, onRegionSelect }: SidebarProp
             />
             <p className="text-xs text-gray-500">Haritada gösterilecek maksimum büyüklük</p>
           </div>
+        </div>
+      </div>
+
+      {/* Tarih Filtreleri */}
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-4">
+          <Calendar className="w-5 h-5 text-primary-600" />
+          <h3 className="text-lg font-semibold text-gray-800">Zaman Aralığı</h3>
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-700">
+              Başlangıç Tarihi
+            </label>
+            <input
+              type="date"
+              value={filters.startDate || ''}
+              onChange={(e) => onFilterChange({ ...filters, startDate: e.target.value || undefined })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-700">
+              Bitiş Tarihi
+            </label>
+            <input
+              type="date"
+              value={filters.endDate || ''}
+              onChange={(e) => onFilterChange({ ...filters, endDate: e.target.value || undefined })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+            />
+          </div>
+
+          {(filters.startDate || filters.endDate) && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() => onFilterChange({ ...filters, startDate: undefined, endDate: undefined })}
+            >
+              Tarih Filtresini Temizle
+            </Button>
+          )}
+
+          <p className="text-xs text-gray-500">
+            Tarih seçilmezse tüm depremler gösterilir
+          </p>
         </div>
       </div>
 

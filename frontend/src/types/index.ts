@@ -50,6 +50,8 @@ export interface FilterState {
   lonRange: [number, number];
   minMag: number;
   maxMag: number;
+  startDate?: string;  // YYYY-MM-DD formatında
+  endDate?: string;    // YYYY-MM-DD formatında
 }
 
 export interface RegionPreset {

@@ -8,8 +8,9 @@ import { EarthquakeMap } from './components/EarthquakeMap';
 import { TrendChart } from './components/TrendChart';
 import { fetchBValue, fetchBValueTrend, fetchEarthquakes, checkApiHealth } from './services/api';
 import type { FilterState, RegionPreset, BValueAnalysis, BValueTrendResponse, EarthquakeResponse } from './types';
-import { Activity, TrendingUp, Map as MapIcon, AlertCircle, Wifi, WifiOff, Table, RefreshCw } from 'lucide-react';
+import { Activity, TrendingUp, Map as MapIcon, AlertCircle, Wifi, WifiOff, Table, RefreshCw, FileDown } from 'lucide-react';
 import { formatNumber } from './lib/utils';
+import { generatePDFReport } from './utils/pdfGenerator';
 
 function App() {
   // State Management
@@ -64,7 +65,7 @@ function App() {
       const [bValue, trend, earthquakes] = await Promise.all([
         fetchBValue(bounds, filters.minMag),
         fetchBValueTrend(bounds, filters.minMag),
-        fetchEarthquakes(bounds, filters.maxMag),
+        fetchEarthquakes(bounds, filters.maxMag, filters.startDate, filters.endDate),
       ]);
 
       setBValueData(bValue);
@@ -386,10 +387,32 @@ function App() {
                 {earthquakeData && earthquakeData.status === 'success' && (
                   <Card>
                     <CardHeader>
-                      <CardTitle>Deprem Kayıtları Tablosu</CardTitle>
-                      <CardDescription>
-                        {earthquakeData.data.length} deprem kaydı (M ≤ {filters.maxMag.toFixed(1)}) - Son 1000 kayıt
-                      </CardDescription>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle>Deprem Kayıtları Tablosu</CardTitle>
+                          <CardDescription>
+                            {earthquakeData.data.length} deprem kaydı (M ≤ {filters.maxMag.toFixed(1)}) - Son 1000 kayıt
+                          </CardDescription>
+                        </div>
+                        <button
+                          onClick={() => generatePDFReport({
+                            earthquakes: earthquakeData.data,
+                            bValueData,
+                            filters: {
+                              latRange: filters.latRange,
+                              lonRange: filters.lonRange,
+                              minMag: filters.minMag,
+                              maxMag: filters.maxMag,
+                              startDate: filters.startDate,
+                              endDate: filters.endDate
+                            }
+                          })}
+                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-lg hover:from-primary-600 hover:to-secondary-600 transition-all shadow-lg hover:shadow-xl"
+                        >
+                          <FileDown className="w-5 h-5" />
+                          PDF Rapor İndir
+                        </button>
+                      </div>
                     </CardHeader>
                     <CardContent>
                       <div className="overflow-x-auto scrollbar-custom">

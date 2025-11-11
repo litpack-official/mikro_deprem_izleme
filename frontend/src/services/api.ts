@@ -83,18 +83,24 @@ export async function fetchBValueTrend(
  */
 export async function fetchEarthquakes(
   bounds: RegionBounds,
-  maxMag: number = 9.9
+  maxMag: number = 9.9,
+  startDate?: string,  // YYYY-MM-DD formatında
+  endDate?: string     // YYYY-MM-DD formatında
 ): Promise<EarthquakeResponse> {
   try {
-    const response = await api.get<EarthquakeResponse>('/depremler', {
-      params: {
-        min_lat: bounds.minLat,
-        max_lat: bounds.maxLat,
-        min_lon: bounds.minLon,
-        max_lon: bounds.maxLon,
-        max_mag: maxMag,
-      },
-    });
+    const params: any = {
+      min_lat: bounds.minLat,
+      max_lat: bounds.maxLat,
+      min_lon: bounds.minLon,
+      max_lon: bounds.maxLon,
+      max_mag: maxMag,
+    };
+    
+    // Tarih filtrelerini ekle
+    if (startDate) params.start_date = startDate;
+    if (endDate) params.end_date = endDate;
+    
+    const response = await api.get<EarthquakeResponse>('/depremler', { params });
     return response.data;
   } catch (error) {
     return handleApiError(error as AxiosError);

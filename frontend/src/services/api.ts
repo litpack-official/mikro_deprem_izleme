@@ -6,8 +6,8 @@ import type {
   RegionBounds,
 } from '@/types';
 
-// API URL - Ngrok URL'iniz
-const API_BASE_URL = 'https://sarcological-fissiparous-melinda.ngrok-free.dev';
+// API URL - Local backend
+const API_BASE_URL = 'http://localhost:8000';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

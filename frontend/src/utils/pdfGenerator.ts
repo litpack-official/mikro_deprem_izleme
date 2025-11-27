@@ -18,7 +18,7 @@ function detectRegion(latRange: [number, number], lonRange: [number, number]): s
   const [minLat, maxLat] = latRange;
   const [minLon, maxLon] = lonRange;
   
-  // Marmara Bölgesi
+  // Marmara Bölgesi (Tekirdağ dahil)
   if (minLat >= 40.0 && maxLat <= 41.5 && minLon >= 26.0 && maxLon <= 30.0) {
     return 'Marmara Bolgesi';
   }
@@ -210,16 +210,14 @@ export function generatePDFReport(data: ReportData) {
   const tableData = earthquakes.slice(0, 100).map(eq => [
     new Date(eq.timestamp).toLocaleDateString('tr-TR'),
     new Date(eq.timestamp).toLocaleTimeString('tr-TR'),
+    convertTurkishChars(`${eq.detailed_location || eq.location_text || 'Bilinmiyor'}\n(${eq.latitude.toFixed(3)}°, ${eq.longitude.toFixed(3)}°)`),
     eq.magnitude.toFixed(1),
-    eq.depth.toFixed(1),
-    `${eq.latitude.toFixed(2)}°`,
-    `${eq.longitude.toFixed(2)}°`,
-    convertTurkishChars(eq.location_text || 'Bilinmiyor')
+    eq.depth.toFixed(1)
   ]);
 
   autoTable(doc, {
     startY: 25,
-    head: [[convertTurkishChars('Tarih'), convertTurkishChars('Saat'), convertTurkishChars('Buyukluk'), convertTurkishChars('Derinlik (km)'), convertTurkishChars('Enlem'), convertTurkishChars('Boylam'), convertTurkishChars('Konum')]],
+    head: [[convertTurkishChars('Tarih'), convertTurkishChars('Saat'), convertTurkishChars('Konum (Koordinat)'), convertTurkishChars('Buyukluk'), convertTurkishChars('Derinlik (km)')]],
     body: tableData,
     styles: { fontSize: 8, cellPadding: 2 },
     headStyles: { fillColor: [20, 184, 166], textColor: 255 },

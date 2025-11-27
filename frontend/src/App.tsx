@@ -10,7 +10,8 @@ import { fetchBValue, fetchBValueTrend, fetchEarthquakes, checkApiHealth } from 
 import type { FilterState, RegionPreset, BValueAnalysis, BValueTrendResponse, EarthquakeResponse } from './types';
 import { Activity, TrendingUp, Map as MapIcon, AlertCircle, Wifi, WifiOff, Table, RefreshCw, FileDown } from 'lucide-react';
 import { formatNumber } from './lib/utils';
-import { generatePDFReport } from './utils/pdfGenerator';
+import { generatePDFReport } from '@/utils/pdfGenerator';
+import { reverseGeocodeWithCache } from '@/services/geocoding';
 
 function App() {
   // State Management
@@ -68,9 +69,32 @@ function App() {
         fetchEarthquakes(bounds, filters.maxMag, filters.startDate, filters.endDate),
       ]);
 
+      // Geocoding ile detaylı konum bilgilerini al (ilk 50 deprem için)
+      const earthquakesWithLocation = [...earthquakes.data];
+      const topEarthquakes = earthquakesWithLocation.slice(0, 50);
+      
+      // Geocoding işlemini arka planda yap
+      Promise.all(
+        topEarthquakes.map(async (eq, index) => {
+          try {
+            const detailedLocation = await reverseGeocodeWithCache(eq.latitude, eq.longitude);
+            earthquakesWithLocation[index] = { ...eq, detailed_location: detailedLocation };
+          } catch (error) {
+            console.error(`Geocoding hatası ${eq.event_id}:`, error);
+            earthquakesWithLocation[index] = { ...eq, detailed_location: eq.location_text };
+          }
+        })
+      ).then(() => {
+        // Güncellenmiş verileri set et
+        setEarthquakeData({
+          ...earthquakes,
+          data: earthquakesWithLocation
+        });
+      });
+
       setBValueData(bValue);
       setTrendData(trend);
-      setEarthquakeData(earthquakes);
+      setEarthquakeData(earthquakes); // İlk önce mevcut veriyi göster
       setLastUpdate(new Date());
     } catch (err: any) {
       setError(err.message || 'Veri yüklenirken bir hata oluştu.');
@@ -444,8 +468,13 @@ function App() {
                                     minute: '2-digit',
                                   })}
                                 </td>
-                                <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate">
-                                  {eq.location_text || 'Bilinmiyor'}
+                                <td className="px-4 py-3 text-sm text-gray-600 max-w-xs">
+                                  <div className="font-medium text-gray-800 truncate">
+                                    {eq.detailed_location || eq.location_text || 'Konum alınıyor...'}
+                                  </div>
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    {eq.latitude.toFixed(3)}°, {eq.longitude.toFixed(3)}°
+                                  </div>
                                 </td>
                                 <td className="px-4 py-3 text-sm text-center text-gray-700">
                                   {eq.latitude.toFixed(4)}°

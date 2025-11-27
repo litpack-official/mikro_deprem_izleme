@@ -80,7 +80,7 @@ export function EarthquakeMap({ earthquakes, bounds }: EarthquakeMapProps) {
                   </div>
                   <div>
                     <span className="font-semibold">Konum:</span>{' '}
-                    {eq.location_text || 'Bilinmiyor'}
+                    {eq.detailed_location || eq.location_text || 'Konum alınıyor...'}
                   </div>
                   <div>
                     <span className="font-semibold">Koordinat:</span>{' '}

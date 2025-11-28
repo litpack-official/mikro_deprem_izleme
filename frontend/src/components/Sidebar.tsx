@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Button } from './ui/Button';
 import { Slider } from './ui/Slider';
 import { REGION_PRESETS, type FilterState, type RegionPreset } from '@/types';
-import { Map, Layers, Settings, Info, Calendar } from 'lucide-react';
+import { Map, Settings, Info, Calendar } from 'lucide-react';
 
 interface SidebarProps {
   filters: FilterState;
@@ -18,15 +18,20 @@ export function Sidebar({ filters, onFilterChange, onRegionSelect }: SidebarProp
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
-      {/* Header */}
+      {/* Header with Logo */}
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-lg">
-            <Layers className="w-6 h-6 text-white" />
+        <div className="flex items-center gap-3 mb-3">
+          <img 
+            src="/logo.png" 
+            alt="Litpack Logo" 
+            className="w-12 h-12 rounded-lg shadow-lg"
+          />
+          <div>
+            <h2 className="text-2xl font-bold gradient-text">LİTPACK</h2>
+            <p className="text-xs text-gray-500">Sismik Analiz</p>
           </div>
-          <h2 className="text-2xl font-bold gradient-text">LİTPACK</h2>
         </div>
-        <p className="text-sm text-gray-600">Sismik Analiz Paneli v3.0</p>
+        <p className="text-sm text-gray-600">Profesyonel Deprem İzleme v3.0</p>
       </div>
 
       {/* Region Selection */}

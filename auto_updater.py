@@ -2,39 +2,25 @@
 Otomatik Deprem Verisi Güncelleyici
 Her 5 dakikada bir EMSC API'den son depremleri çeker ve veritabanına kaydeder
 """
-import os
-from dotenv import load_dotenv
-load_dotenv()
-
 import requests
-import psycopg2
+import sqlite3
 import time
 from datetime import datetime, UTC, timedelta
-from dateutil.relativedelta import relativedelta
+from pathlib import Path
 
-# Veritabanı ayarları
-DB_HOST = "localhost"
-DB_PORT = "5432"
-DB_NAME = "sismik_db"
-DB_USER = "postgres"
-DB_PASS = os.getenv("DB_PASSWORD", "0147258369")
+# SQLite veritabanı dosyası
+DB_PATH = Path(__file__).parent / "sismik.db"
 
 # EMSC API ayarları
 EMSC_API_URL = "https://www.seismicportal.eu/fdsnws/event/1/query"
 UPDATE_INTERVAL = 300  # 5 dakika (saniye cinsinden)
 
 def get_db_connection():
-    """Veritabanı bağlantısı oluştur"""
+    """SQLite veritabanı bağlantısı oluştur"""
     try:
-        conn = psycopg2.connect(
-            host=DB_HOST,
-            port=DB_PORT,
-            dbname=DB_NAME,
-            user=DB_USER,
-            password=DB_PASS
-        )
+        conn = sqlite3.connect(str(DB_PATH))
         return conn
-    except psycopg2.Error as e:
+    except sqlite3.Error as e:
         print(f"❌ Veritabanı bağlantı hatası: {e}")
         return None
 
@@ -96,16 +82,13 @@ def save_to_database(conn, earthquakes):
                 continue
             
             sql = """
-            INSERT INTO earthquakes 
-                (event_id, timestamp, latitude, longitude, depth, magnitude, location_text, geom)
-            VALUES 
-                (%s, %s, %s, %s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326))
-            ON CONFLICT (event_id) DO NOTHING;
+            INSERT OR IGNORE INTO earthquakes 
+                (event_id, timestamp, latitude, longitude, depth, magnitude, location_text)
+            VALUES (?, ?, ?, ?, ?, ?, ?);
             """
             
             cur.execute(sql, (
-                event_id, timestamp, latitude, longitude, depth, magnitude, location_text,
-                longitude, latitude
+                event_id, timestamp, latitude, longitude, depth, magnitude, location_text
             ))
             
             if cur.rowcount > 0:
@@ -121,7 +104,7 @@ def save_to_database(conn, earthquakes):
         
         return new_count
         
-    except psycopg2.Error as e:
+    except sqlite3.Error as e:
         print(f"❌ Veritabanı kayıt hatası: {e}")
         if conn:
             conn.rollback()

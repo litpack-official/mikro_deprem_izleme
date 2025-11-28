@@ -1,16 +1,12 @@
 import requests
-import json
-import psycopg2
-import time
+import sqlite3
 from datetime import datetime, timedelta, UTC
-from dateutil.relativedelta import relativedelta
-import os # <<< GÜVENLİK
-from dotenv import load_dotenv # <<< GÜVENLİK
+from pathlib import Path
 
-# --- 1. AYARLAR (FAZ 11.6: CANLI GÜNCELLEME MODU) ---
+# --- 1. AYARLAR (SQLite Versiyonu) ---
 
-# Güvenlik: .env dosyasındaki gizli bilgileri yükle
-load_dotenv()
+# SQLite veritabanı dosyası (proje klasöründe)
+DB_PATH = Path(__file__).parent / "sismik.db"
 
 # Tarihleri belirle: Son 2 gün (Bugün ve Dün)
 # Bu, Windows Görevi her 15 dakikada çalıştığında,
@@ -22,28 +18,19 @@ start_date = (datetime.now(UTC) - timedelta(days=2)).strftime("%Y-%m-%d")
 EMSC_API_URL = (
     "https://www.seismicportal.eu/fdsnws/event/1/query?"
     "format=json"
-    "&minlat=36&maxlat=42&minlon=26&maxlon=45" # Tüm Türkiye
-    f"&starttime={start_date}" # Başlangıç: 2 Gün Önce
-    f"&endtime={end_date}"     # Bitiş: Bugün
+    "&minlat=36&maxlat=42&minlon=26&maxlon=45"
+    f"&starttime={start_date}" 
+    f"&endtime={end_date}"     
     "&minmag=-1"
 )
 
 # VERİTABANI BAĞLANTI AYARLARI
-DB_HOST = "localhost"
-DB_PORT = "5432"
-DB_NAME = "sismik_db"
-DB_USER = "postgres"
-# <<< GÜVENLİK: Parola artık gizli .env dosyasından okunuyor
 DB_PASS = os.getenv("DB_PASSWORD") 
 
 # --- 2. VERİ ÇEKME FONKSİYONU ---
 def fetch_deprem_verisi():
-    print(f"PROGRAM BAŞLADI (CANLI GÜNCELLEME MODU v2.2)")
+    print(f"PROGRAM BAŞLADI (SQLite Versiyonu)")
     print(f"EMSC'den son 2 günün ({start_date} -> {end_date}) verisi çekiliyor...")
-
-    if not DB_PASS:
-        print("HATA: .env dosyasında DB_PASSWORD bulunamadı veya .env dosyası yok.")
-        return []
 
     try:
         headers = {'User-Agent': 'LitapackSismikProje/1.0 (Python)'}
@@ -90,12 +77,11 @@ def kaydet_veritabani(conn, depremler_listesi):
                 continue
 
             sql_komutu = """
-            INSERT INTO earthquakes 
-                (event_id, timestamp, latitude, longitude, depth, magnitude, location_text, geom)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326))
-            ON CONFLICT (event_id) DO NOTHING;
+            INSERT OR IGNORE INTO earthquakes 
+                (event_id, timestamp, latitude, longitude, depth, magnitude, location_text)
+            VALUES (?, ?, ?, ?, ?, ?, ?);
             """
-            cur.execute(sql_komutu, (event_id, timestamp, latitude, longitude, depth, magnitude, location_text, longitude, latitude))
+            cur.execute(sql_komutu, (event_id, timestamp, latitude, longitude, depth, magnitude, location_text))
 
             if cur.rowcount > 0:
                 yeni_kayit_sayisi += 1
@@ -106,22 +92,54 @@ def kaydet_veritabani(conn, depremler_listesi):
         print(f"{total_depremler - yeni_kayit_sayisi} adet deprem zaten günceldi.")
         return yeni_kayit_sayisi
 
-    except psycopg2.Error as e:
+    except sqlite3.Error as e:
         print(f"VERİTABANI HATASI: {e}")
         if conn: conn.rollback()
         return 0
 
-# --- 4. ANA PROGRAM (Canlı Mod) ---
+# --- 4. VERİTABANI TABLO OLUŞTURMA ---
+def create_database():
+    """SQLite veritabanını ve tabloyu oluşturur"""
+    conn = sqlite3.connect(str(DB_PATH))
+    cur = conn.cursor()
+    
+    # Tablo oluştur
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS earthquakes (
+            event_id TEXT PRIMARY KEY,
+            timestamp TEXT NOT NULL,
+            latitude REAL NOT NULL,
+            longitude REAL NOT NULL,
+            depth REAL NOT NULL,
+            magnitude REAL NOT NULL,
+            location_text TEXT
+        )
+    """)
+    
+    # İndeksler oluştur (hızlı sorgular için)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_timestamp ON earthquakes(timestamp)")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_location ON earthquakes(latitude, longitude)")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_magnitude ON earthquakes(magnitude)")
+    
+    conn.commit()
+    conn.close()
+    print("✅ Veritabanı tablosu hazır.")
+
+# --- 5. ANA PROGRAM ---
 if __name__ == "__main__":
     conn = None
     try:
-        conn = psycopg2.connect(host=DB_HOST, port=DB_PORT, dbname=DB_NAME, user=DB_USER, password=DB_PASS)
+        # Veritabanını oluştur
+        create_database()
+        
+        # Bağlan ve veri yükle
+        conn = sqlite3.connect(str(DB_PATH))
         depremler = fetch_deprem_verisi()
-        if depremler: # Sadece deprem bulunduysa kaydet
+        if depremler:
             kaydet_veritabani(conn, depremler)
-        print("Canlı güncelleme programı başarıyla tamamlandı.")
-    except psycopg2.Error as e:
-        print(f"ANA BAĞLANTI HATASI: {e}")
+        print("✅ Veri yükleme programı başarıyla tamamlandı.")
+    except sqlite3.Error as e:
+        print(f"❌ ANA BAĞLANTI HATASI: {e}")
     finally:
         if conn:
             conn.close()

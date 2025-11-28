@@ -1,17 +1,14 @@
 import os
-from dotenv import load_dotenv
-load_dotenv()
-import psycopg2
-import psycopg2.extras
+import sqlite3
+from pathlib import Path
 import numpy as np
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 
-# --- 1. AYARLAR ---
-DB_HOST = "localhost"; DB_PORT = "5432"; DB_NAME = "sismik_db"; DB_USER = "postgres"
-DB_PASS = os.getenv("DB_PASSWORD", "0147258369")  # Environment variable veya default
+# --- 1. AYARLAR (SQLite Versiyonu) ---
+DB_PATH = Path(__file__).parent / "sismik.db"
 
 # --- 2. FastAPI UYGULAMASINI BAŞLATMA ---
 app = FastAPI(
@@ -28,12 +25,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- 3. VERİTABANI BAĞLANTI FONKSİYONU ---
+# --- 3. VERİTABANI BAĞLANTI FONKSİYONU (SQLite) ---
 def get_db_connection():
     try:
-        conn = psycopg2.connect(host=DB_HOST, port=DB_PORT, dbname=DB_NAME, user=DB_USER, password=DB_PASS)
+        conn = sqlite3.connect(str(DB_PATH))
+        conn.row_factory = sqlite3.Row  # Dict-like access
         return conn
-    except psycopg2.Error as e:
+    except sqlite3.Error as e:
         print(f"VERİTABANI BAĞLANTI HATASI: {e}")
         raise HTTPException(status_code=500, detail="Veritabanı bağlantı hatası.")
 
@@ -70,8 +68,8 @@ async def get_b_value_over_time(
         sql_komutu = """
             SELECT magnitude, timestamp FROM earthquakes
             WHERE 
-                latitude >= %s AND latitude <= %s AND
-                longitude >= %s AND longitude <= %s;
+                latitude >= ? AND latitude <= ? AND
+                longitude >= ? AND longitude <= ?;
         """
         # Veriyi Pandas DataFrame'e yükle (çok hızlıdır)
         df = pd.read_sql_query(sql_komutu, conn, params=(min_lat, max_lat, min_lon, max_lon))
@@ -125,13 +123,13 @@ async def get_b_value_analysis(min_lat: float = Query(36.0), max_lat: float = Qu
     conn = None
     try:
         conn = get_db_connection()
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        sql = "SELECT magnitude FROM earthquakes WHERE latitude >= %s AND latitude <= %s AND longitude >= %s AND longitude <= %s;"
+        cur = conn.cursor()
+        sql = "SELECT magnitude FROM earthquakes WHERE latitude >= ? AND latitude <= ? AND longitude >= ? AND longitude <= ?;"
         cur.execute(sql, (min_lat, max_lat, min_lon, max_lon))
         results = cur.fetchall()
         cur.close()
         if not results: raise HTTPException(404, "Seçilen bölgede deprem bulunamadı.")
-        m_list = [r['magnitude'] for r in results]
+        m_list = [r[0] for r in results]
         b_val, n_calc = calculate_b_value(m_list, m_min=min_mag)
         if b_val is None: raise HTTPException(500, f"b-değeri hesaplanamadı. Veri yetersiz (N={n_calc} < 50).")
         return {"status": "success", "analiz_parametreleri": {"bolgedeki_toplam_deprem": len(m_list), "analize_giren_deprem_sayisi_N": n_calc, "min_buyukluk_Mc": min_mag}, "b_value": b_val}
@@ -152,34 +150,47 @@ async def get_son_depremler(
     conn = None
     try:
         conn = get_db_connection()
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur = conn.cursor()
         
         # SQL sorgusu - tarih filtresi ekle
         sql = """
             SELECT event_id, timestamp, latitude, longitude, depth, magnitude, location_text 
             FROM earthquakes 
-            WHERE latitude >= %s AND latitude <= %s 
-            AND longitude >= %s AND longitude <= %s 
-            AND magnitude <= %s
+            WHERE latitude >= ? AND latitude <= ? 
+            AND longitude >= ? AND longitude <= ? 
+            AND magnitude <= ?
         """
         params = [min_lat, max_lat, min_lon, max_lon, max_mag]
         
         # Tarih filtrelerini ekle
         if start_date:
-            sql += " AND timestamp >= %s"
+            sql += " AND timestamp >= ?"
             params.append(start_date)
         if end_date:
-            sql += " AND timestamp <= %s"
+            sql += " AND timestamp <= ?"
             params.append(end_date + " 23:59:59")  # Günün sonuna kadar
         
         sql += " ORDER BY timestamp DESC LIMIT 1000;"
         cur.execute(sql, params)
-        depremler = cur.fetchall()
+        rows = cur.fetchall()
         cur.close()
+        
+        # Convert to dict list
+        depremler = []
+        for row in rows:
+            depremler.append({
+                'event_id': row[0],
+                'timestamp': row[1],
+                'latitude': row[2],
+                'longitude': row[3],
+                'depth': row[4],
+                'magnitude': row[5],
+                'location_text': row[6]
+            })
         
         # Konum bilgisi yoksa koordinatlardan oluştur
         for deprem in depremler:
-            if not deprem.get('location_text') or deprem['location_text'] == 'None':
+            if not deprem.get('location_text') or deprem['location_text'] in ['None', None, '']:
                 lat = deprem['latitude']
                 lon = deprem['longitude']
                 # Basit bölge tespiti

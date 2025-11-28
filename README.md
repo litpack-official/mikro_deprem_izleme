@@ -1,4 +1,4 @@
-# 🌍 Litpack Sismik Analiz - Modern Masaüstü Uygulaması
+# 🌍 Litpack Sismik Analiz - Portable Desktop App
 
 **Profesyonel sismik veri analizi ve gerçek zamanlı deprem izleme platformu**
 
@@ -6,6 +6,8 @@
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
 ![React](https://img.shields.io/badge/react-18.2-blue.svg)
+![Database](https://img.shields.io/badge/database-SQLite-green.svg)
+![Portable](https://img.shields.io/badge/portable-yes-brightgreen.svg)
 
 ## 📸 Ekran Görüntüleri
 
@@ -43,7 +45,7 @@ Modern, profesyonel arayüz ile deprem verilerini analiz edin:
 
 ### Backend
 - **FastAPI** - Modern, hızlı REST API framework
-- **PostgreSQL + PostGIS** - Coğrafi veri depolama
+- **SQLite** - Portable veritabanı (PostgreSQL gereksiz!)
 - **Pandas** - Zamansal veri analizi
 - **NumPy** - Bilimsel hesaplamalar
 - **EMSC API** - Deprem verisi kaynağı
@@ -55,49 +57,37 @@ Modern, profesyonel arayüz ile deprem verilerini analiz edin:
 - **Framer Motion** - Animasyon kütüphanesi
 - **Recharts** - Grafik görselleştirme
 - **React-Leaflet** - İnteraktif haritalar
-- **Electron** - Masaüstü uygulama
 
 ## 📦 Kurulum
 
-### Gereksinimler
-- Node.js 18+
-- Python 3.10+
-- PostgreSQL 14+ (PostGIS extension)
+### ⚡ Hızlı Başlangıç (Windows)
 
-### 1. Repository'yi Klonlayın
+**SADECE 3 ADIM!**
+
+#### 1. Gereksinimleri Yükleyin
+- **Python 3.10+** → https://www.python.org/downloads/
+- **Node.js 18+** → https://nodejs.org/
+
+**NOT:** PostgreSQL kurmanıza gerek YOK! SQLite kullanılıyor.
+
+#### 2. Bağımlılıkları Yükleyin
 ```bash
-git clone https://github.com/[kullanici-adi]/litpack-sismik.git
-cd litpack-sismik
-```
+# Python paketleri
+pip install -r requirements.txt
 
-### 2. Backend Kurulumu
-```bash
-# Python bağımlılıklarını yükle
-pip install fastapi uvicorn psycopg2-binary pandas numpy python-dotenv python-dateutil requests
-
-# Veritabanını oluştur (PostgreSQL çalışıyor olmalı)
-createdb -U postgres sismik_db
-psql -U postgres -d sismik_db -c "CREATE EXTENSION postgis;"
-
-# Tablo oluştur
-psql -U postgres -d sismik_db -f database_schema.sql
-
-# İlk veri yüklemesi (12 aylık)
-python ingestor.py
-
-# API sunucusunu başlat
-uvicorn main:app --reload --host 127.0.0.1 --port 8000
-```
-
-### 3. Frontend Kurulumu
-```bash
+# Frontend paketleri
 cd frontend
-
-# Bağımlılıkları yükle
 npm install
+cd ..
+```
 
-# Development modunda çalıştır
-npm run dev
+#### 3. Veritabanını Kurun ve Başlatın
+```bash
+# Veritabanı kurulumu (ilk sefer)
+VERITABANI_KURULUM.bat
+
+# Uygulamayı başlat
+CALISTIR.bat
 
 # Tarayıcıda otomatik açılır: http://localhost:5173
 ```

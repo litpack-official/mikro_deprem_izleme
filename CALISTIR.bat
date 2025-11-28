@@ -12,7 +12,7 @@ echo.
 REM Bulundugumuz dizine git
 cd /d "%~dp0"
 
-echo [1/3] Python kontrolu...
+echo [1/4] Python kontrolu...
 python --version >nul 2>&1
 if errorlevel 1 (
     echo HATA: Python bulunamadi!
@@ -22,7 +22,19 @@ if errorlevel 1 (
 echo OK Python bulundu
 
 echo.
-echo [2/3] Node.js kontrolu...
+echo [2/4] Veritabani kontrolu...
+if not exist "sismik.db" (
+    echo UYARI: Veritabani bulunamadi!
+    echo.
+    echo Lutfen once VERITABANI_KURULUM.bat dosyasini calistirin.
+    echo.
+    pause
+    exit /b 1
+)
+echo OK Veritabani bulundu
+
+echo.
+echo [3/4] Node.js kontrolu...
 node --version >nul 2>&1
 if errorlevel 1 (
     echo HATA: Node.js bulunamadi!
@@ -32,7 +44,7 @@ if errorlevel 1 (
 echo OK Node.js bulundu
 
 echo.
-echo [3/3] Servisler baslatiliyor...
+echo [4/4] Servisler baslatiliyor...
 echo.
 
 REM Backend'i arka planda baslat

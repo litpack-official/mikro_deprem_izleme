@@ -1,0 +1,137 @@
+================================================================================
+    LITPACK SISMIK ANALIZ - HIZLI BASLANGIC REHBERI
+================================================================================
+
+BU DOSYAYI MUTLAKA OKUYUN!
+
+================================================================================
+GEREKSINIMLER
+================================================================================
+
+1. PYTHON 3.10+
+   Indirme: https://www.python.org/downloads/
+   
+   ONEMLI: Kurulumda "Add Python to PATH" secenegini MUTLAKA isaretleyin!
+   
+2. NODE.JS 18+
+   Indirme: https://nodejs.org/
+   
+   LTS (Long Term Support) versiyonunu secin.
+
+NOT: PostgreSQL kurmaniza gerek YOK! SQLite kullanilmaktadir.
+
+================================================================================
+ILK KURULUM (SADECE BIR SEFER)
+================================================================================
+
+ADIM 1: Python Paketlerini Yukleyin
+------------------------------------
+Komut satirini (CMD) acin ve su komutu calistirin:
+
+    pip install -r requirements.txt
+
+ADIM 2: Frontend Paketlerini Yukleyin
+--------------------------------------
+    cd frontend
+    npm install
+    cd ..
+
+ADIM 3: Veritabanini Kurun
+---------------------------
+"VERITABANI_KURULUM.bat" dosyasina CIFT TIKLAYIN
+
+Bu script:
+- SQLite veritabani olusturur (sismik.db)
+- EMSC'den son 2 gunluk deprem verilerini indirir
+   
+2-3 dakika bekleyin, "BASARILI!" mesajini gorun.
+
+================================================================================
+UYGULAMAYI BASLATIN
+================================================================================
+
+"CALISTIR.bat" dosyasina CIFT TIKLAYIN
+
+Script su islemleri yapacak:
+- Python ve Node.js kontrolu
+- Veritabani kontrolu
+- Backend API'yi baslatir (Port 8000)
+- Frontend'i baslatir (Port 5173)
+- Tarayiciyi otomatik acar
+   
+Tarayicinizda uygulama acilacak: http://localhost:5173
+
+ONEMLI: Acilan CMD penceresini KAPATMAYIN! Kapatirsan uygulama durur.
+
+================================================================================
+OTOMATIK GUNCELLEME (OPSIYONEL)
+================================================================================
+
+Her 5 dakikada bir yeni depremleri otomatik yuklemek icin:
+
+1. Yeni bir CMD penceresi acin
+2. Proje klasorune gidin
+3. Komutu calistirin: python auto_updater.py
+
+Bu script arka planda calisir ve EMSC'den yeni depremleri cekerken
+uygulama otomatik olarak yenilenir.
+
+================================================================================
+SORUN GIDERME
+================================================================================
+
+PROBLEM: "Python bulunamadi" hatasi
+COZUM: Python'u PATH'e ekleyin veya yeniden yukleyin
+
+PROBLEM: "Veritabani bulunamadi" hatasi
+COZUM: VERITABANI_KURULUM.bat'i calistirin
+
+PROBLEM: "Port 8000 kullanimda" hatasi
+COZUM: Baska bir uygulama port 8000'i kullaniyor
+       O uygulamayi kapatin veya main.py'de portu degistirin
+
+PROBLEM: Frontend acilmiyor
+COZUM: 1. node_modules klasorunu silin
+       2. frontend klasorunde: npm install
+       3. CALISTIR.bat'i tekrar calistirin
+
+================================================================================
+DOSYA YAPISI
+================================================================================
+
+litpack_sismik/
+├── CALISTIR.bat                  <- BUNU CALISTIRIN (Ana uygulama)
+├── VERITABANI_KURULUM.bat        <- ILK SEFERDE BUNU CALISTIRIN
+├── HIZLI_BASLANGIC.txt           <- Bu dosya
+├── requirements.txt              <- Python paketleri
+├── main.py                       <- Backend API (SQLite)
+├── ingestor.py                   <- Veri yukleme
+├── auto_updater.py               <- Otomatik guncelleme
+├── sismik.db                     <- SQLite veritabani (otomatik olusur)
+└── frontend/                     <- React uygulamasi
+
+================================================================================
+TEKNIK DETAYLAR
+================================================================================
+
+Backend API: http://127.0.0.1:8000
+Frontend: http://localhost:5173
+
+Endpoints:
+- GET /b_value - Anlik stres analizi
+- GET /b_value_over_time - Zamansal trend
+- GET /depremler - Deprem listesi
+
+Veritabani: SQLite (sismik.db dosyasi)
+Veri Kaynagi: EMSC (European-Mediterranean Seismological Centre)
+
+================================================================================
+DESTEK
+================================================================================
+
+GitHub: https://github.com/litpack-official/mikro_deprem_izleme
+
+Version: 3.0.0 (SQLite Portable Edition)
+Lisans: MIT
+
+================================================================================

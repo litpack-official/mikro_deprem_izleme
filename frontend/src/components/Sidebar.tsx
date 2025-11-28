@@ -20,18 +20,21 @@ export function Sidebar({ filters, onFilterChange, onRegionSelect }: SidebarProp
     >
       {/* Header with Logo */}
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-3">
-          <img 
-            src="/logo.png" 
-            alt="Litpack Logo" 
-            className="w-12 h-12 rounded-lg shadow-lg"
-          />
+        <div className="flex flex-col items-center text-center mb-4">
+          <div className="relative mb-4">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-2xl blur-xl opacity-50 animate-pulse"></div>
+            <img 
+              src="/logo.png" 
+              alt="Litpack Logo" 
+              className="relative w-24 h-24 rounded-2xl shadow-2xl transform hover:scale-105 transition-transform duration-300"
+            />
+          </div>
           <div>
-            <h2 className="text-2xl font-bold gradient-text">LİTPACK</h2>
-            <p className="text-xs text-gray-500">Sismik Analiz</p>
+            <h2 className="text-3xl font-bold gradient-text mb-1">LİTPACK</h2>
+            <p className="text-sm font-medium text-primary-600">Sismik Analiz Sistemi</p>
+            <p className="text-xs text-gray-500 mt-1">Profesyonel Deprem İzleme v3.0</p>
           </div>
         </div>
-        <p className="text-sm text-gray-600">Profesyonel Deprem İzleme v3.0</p>
       </div>
 
       {/* Region Selection */}

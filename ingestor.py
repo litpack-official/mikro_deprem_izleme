@@ -24,9 +24,6 @@ EMSC_API_URL = (
     "&minmag=-1"
 )
 
-# VERİTABANI BAĞLANTI AYARLARI
-DB_PASS = os.getenv("DB_PASSWORD") 
-
 # --- 2. VERİ ÇEKME FONKSİYONU ---
 def fetch_deprem_verisi():
     print(f"PROGRAM BAŞLADI (SQLite Versiyonu)")

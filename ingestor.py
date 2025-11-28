@@ -1,12 +1,9 @@
 import requests
 import sqlite3
 from datetime import datetime, timedelta, UTC
-from pathlib import Path
+from config import DB_PATH  # Portable path configuration
 
 # --- 1. AYARLAR (SQLite Versiyonu) ---
-
-# SQLite veritabanı dosyası (proje klasöründe)
-DB_PATH = Path(__file__).parent / "sismik.db"
 
 # Tarihleri belirle: Son 2 gün (Bugün ve Dün)
 # Bu, Windows Görevi her 15 dakikada çalıştığında,

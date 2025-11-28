@@ -5,9 +5,7 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
-
-# --- 1. AYARLAR (SQLite Versiyonu) ---
-DB_PATH = Path(__file__).parent / "sismik.db"
+from config import DB_PATH  # Portable path configuration
 
 # --- 2. FastAPI UYGULAMASINI BAŞLATMA ---
 app = FastAPI(

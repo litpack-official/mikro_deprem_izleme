@@ -5,11 +5,8 @@ Her 5 dakikada bir EMSC API'den son depremleri çeker ve veritabanına kaydeder
 import requests
 import sqlite3
 import time
-from datetime import datetime, UTC, timedelta
-from pathlib import Path
-
-# SQLite veritabanı dosyası
-DB_PATH = Path(__file__).parent / "sismik.db"
+from datetime import datetime, timedelta, UTC
+from config import DB_PATH  # Portable path configuration
 
 # EMSC API ayarları
 EMSC_API_URL = "https://www.seismicportal.eu/fdsnws/event/1/query"
